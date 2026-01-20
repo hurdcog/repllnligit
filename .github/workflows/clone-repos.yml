@@ -63,10 +63,10 @@ jobs:
           df -h .
           echo ""
           echo "Cloned repositories:"
-          du -sh "${{ inputs.output_directory }}" || echo "Output directory not found"
+          du -sh "${{ inputs.output_directory }}" 2>/dev/null || echo "Output directory not found"
           echo ""
           echo "Repository count in output:"
-          ls -1 "${{ inputs.output_directory }}" | wc -l || echo "Output directory not found"
+          ls -1 "${{ inputs.output_directory }}" 2>/dev/null | wc -l || echo "0"
       
       - name: Create artifact
         if: ${{ inputs.create_artifact }}
@@ -88,8 +88,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Results" >> $GITHUB_STEP_SUMMARY
           if [ -d "${{ inputs.output_directory }}" ]; then
-            COUNT=$(ls -1 "${{ inputs.output_directory }}" | wc -l)
-            SIZE=$(du -sh "${{ inputs.output_directory }}" | cut -f1)
+            COUNT=$(ls -1 "${{ inputs.output_directory }}" 2>/dev/null | wc -l || echo 0)
+            SIZE=$(du -sh "${{ inputs.output_directory }}" 2>/dev/null | cut -f1 || echo "N/A")
             echo "- **Cloned repositories:** $COUNT" >> $GITHUB_STEP_SUMMARY
             echo "- **Total size:** $SIZE" >> $GITHUB_STEP_SUMMARY
           else
