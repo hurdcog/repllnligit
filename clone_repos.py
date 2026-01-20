@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 # Constants
+CLONE_TIMEOUT_SECONDS = 300  # 5 minutes per repository
 ERROR_MESSAGE_MAX_LENGTH = 100
 
 
@@ -26,9 +27,14 @@ def parse_tsv(tsv_file):
             if len(parts) >= 2:
                 url = parts[0]
                 name = parts[1]
-                # Skip header row if it doesn't look like a URL
-                if line_num == 1 and not url.startswith(('http://', 'https://', 'git@')):
-                    continue
+                # Skip header row if it looks like a header
+                if line_num == 1:
+                    url_lower = url.lower()
+                    # Check if it's a header by looking for common header keywords
+                    # or if it doesn't start with a valid protocol
+                    if (url_lower in ('url', 'repository', 'repo', 'link', 'git_url') or
+                        not url.startswith(('http://', 'https://', 'git@'))):
+                        continue
                 repos.append((url, name))
     return repos
 
@@ -41,14 +47,14 @@ def clone_repo(url, dest_path):
             ['git', 'clone', '--depth', '1', url, str(dest_path)],
             capture_output=True,
             text=True,
-            timeout=300  # 5 minute timeout per repo
+            timeout=CLONE_TIMEOUT_SECONDS
         )
         if result.returncode == 0:
             return True, None
         else:
             return False, result.stderr
     except subprocess.TimeoutExpired:
-        return False, "Timeout after 5 minutes"
+        return False, f"Timeout after {CLONE_TIMEOUT_SECONDS} seconds"
     except Exception as e:
         return False, str(e)
 
