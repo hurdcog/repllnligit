@@ -10,9 +10,34 @@ The `clone_repos.py` script automates the process of:
 3. Removing the `.git` directory from each cloned repository
 4. Providing progress tracking and error reporting
 
-## Usage
+## Usage Options
 
-### Basic Usage
+### Option 1: GitHub Action (Recommended for CI/CD)
+
+A manually triggered GitHub Action workflow is available for running the clone script in a controlled environment.
+
+**To trigger the workflow:**
+
+1. Go to the "Actions" tab in the GitHub repository
+2. Select "Clone Repositories" from the workflow list
+3. Click "Run workflow"
+4. Configure the inputs:
+   - **TSV file**: Path to TSV file (default: `llnl2do.tsv`)
+   - **Output directory**: Where to clone repos (default: `cloned_repos`)
+   - **Create artifact**: Whether to upload cloned repos as artifact (default: `false`)
+     - ⚠️ Only enable for small test sets due to artifact size limits
+5. Click "Run workflow" button
+
+**Benefits:**
+- Runs in a clean, isolated environment
+- Automatic disk space monitoring
+- Progress tracking in GitHub logs
+- Summary report in workflow run
+- Optional artifact creation for small sets
+
+**Note:** The workflow has a 12-hour timeout to accommodate large clone operations.
+
+### Option 2: Local Command Line
 
 To clone all repositories from `llnl2do.tsv` into the default `cloned_repos` directory:
 
@@ -20,7 +45,7 @@ To clone all repositories from `llnl2do.tsv` into the default `cloned_repos` dir
 python3 clone_repos.py
 ```
 
-### Custom TSV File and Output Directory
+#### Custom TSV File and Output Directory
 
 You can specify custom input and output paths:
 

@@ -1,0 +1,97 @@
+name: Clone Repositories
+
+on:
+  workflow_dispatch:
+    inputs:
+      tsv_file:
+        description: 'TSV file containing repository list'
+        required: false
+        default: 'llnl2do.tsv'
+        type: string
+      output_directory:
+        description: 'Output directory for cloned repositories'
+        required: false
+        default: 'cloned_repos'
+        type: string
+      create_artifact:
+        description: 'Create artifact with cloned repos (for small sets only)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  clone-repositories:
+    runs-on: ubuntu-latest
+    timeout-minutes: 720  # 12 hours max for large clone operations
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Display inputs
+        run: |
+          echo "TSV File: ${{ inputs.tsv_file }}"
+          echo "Output Directory: ${{ inputs.output_directory }}"
+          echo "Create Artifact: ${{ inputs.create_artifact }}"
+      
+      - name: Check disk space before cloning
+        run: |
+          echo "Available disk space:"
+          df -h .
+          echo ""
+          echo "Repository count:"
+          wc -l "${{ inputs.tsv_file }}"
+      
+      - name: Run clone script
+        run: |
+          python3 clone_repos.py "${{ inputs.tsv_file }}" "${{ inputs.output_directory }}"
+      
+      - name: Check disk space after cloning
+        if: always()
+        run: |
+          echo "Available disk space after cloning:"
+          df -h .
+          echo ""
+          echo "Cloned repositories:"
+          du -sh "${{ inputs.output_directory }}" || echo "Output directory not found"
+          echo ""
+          echo "Repository count in output:"
+          ls -1 "${{ inputs.output_directory }}" | wc -l || echo "Output directory not found"
+      
+      - name: Create artifact
+        if: ${{ inputs.create_artifact == true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloned-repositories
+          path: ${{ inputs.output_directory }}
+          retention-days: 7
+          compression-level: 9
+      
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Clone Repositories Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **TSV File:** \`${{ inputs.tsv_file }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Output Directory:** \`${{ inputs.output_directory }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Create Artifact:** ${{ inputs.create_artifact }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Results" >> $GITHUB_STEP_SUMMARY
+          if [ -d "${{ inputs.output_directory }}" ]; then
+            COUNT=$(ls -1 "${{ inputs.output_directory }}" | wc -l)
+            SIZE=$(du -sh "${{ inputs.output_directory }}" | cut -f1)
+            echo "- **Cloned repositories:** $COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Total size:** $SIZE" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status:** Failed to create output directory" >> $GITHUB_STEP_SUMMARY
+          fi
