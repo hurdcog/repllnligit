@@ -4,7 +4,6 @@ Script to clone repositories from llnl2do.tsv and remove .git directories.
 This prepares the repos as native code for integration into a monorepo.
 """
 
-import os
 import shutil
 import subprocess
 import sys
@@ -75,9 +74,19 @@ def main():
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True)
     
+    # Check if TSV file exists
+    if not Path(tsv_file).exists():
+        print(f"Error: TSV file '{tsv_file}' not found.")
+        print(f"Please ensure the file exists and try again.")
+        return 1
+    
     # Parse TSV file
     print(f"Reading repositories from {tsv_file}...")
-    repos = parse_tsv(tsv_file)
+    try:
+        repos = parse_tsv(tsv_file)
+    except Exception as e:
+        print(f"Error reading TSV file: {e}")
+        return 1
     print(f"Found {len(repos)} repositories to clone.")
     
     # Track results
