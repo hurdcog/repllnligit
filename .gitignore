@@ -4,3 +4,8 @@ build-*
 
 __pycache__/
 dist/
+
+# Cloned repositories
+cloned_repos/
+test_cloned_repos/
+test_repos.tsv
