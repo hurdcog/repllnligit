@@ -4,6 +4,7 @@ Script to clone repositories from llnl2do.tsv and remove .git directories.
 This prepares the repos as native code for integration into a monorepo.
 """
 
+import re
 import shutil
 import subprocess
 import sys
@@ -45,7 +46,6 @@ def sanitize_error_message(error_msg):
         return error_msg
     
     # Remove credentials from URLs (format: https://user:pass@host...)
-    import re
     # Pattern to match credentials in URLs
     pattern = r'(https?://)[^@\s]+:[^@\s]+@'
     sanitized = re.sub(pattern, r'\1***:***@', error_msg)
