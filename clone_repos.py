@@ -10,11 +10,15 @@ import sys
 from pathlib import Path
 
 
+# Constants
+ERROR_MESSAGE_MAX_LENGTH = 100
+
+
 def parse_tsv(tsv_file):
     """Parse the TSV file and extract repository information."""
     repos = []
     with open(tsv_file, 'r', encoding='utf-8') as f:
-        for line in f:
+        for line_num, line in enumerate(f, 1):
             line = line.strip()
             if not line:
                 continue
@@ -22,6 +26,9 @@ def parse_tsv(tsv_file):
             if len(parts) >= 2:
                 url = parts[0]
                 name = parts[1]
+                # Skip header row if it doesn't look like a URL
+                if line_num == 1 and not url.startswith(('http://', 'https://', 'git@')):
+                    continue
                 repos.append((url, name))
     return repos
 
@@ -130,7 +137,7 @@ def main():
     if failed_repos:
         print("\nFailed repositories:")
         for name, error in failed_repos:
-            print(f"  - {name}: {error[:100]}")
+            print(f"  - {name}: {error[:ERROR_MESSAGE_MAX_LENGTH]}")
     
     return 0 if len(failed_repos) == 0 else 1
 
