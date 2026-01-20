@@ -5,6 +5,7 @@ This prepares the repos as native code for integration into a monorepo.
 """
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,7 +14,7 @@ from pathlib import Path
 def parse_tsv(tsv_file):
     """Parse the TSV file and extract repository information."""
     repos = []
-    with open(tsv_file, 'r') as f:
+    with open(tsv_file, 'r', encoding='utf-8') as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -51,7 +52,7 @@ def remove_git_dir(repo_path):
     git_dir = repo_path / '.git'
     if git_dir.exists():
         try:
-            subprocess.run(['rm', '-rf', str(git_dir)], check=True)
+            shutil.rmtree(git_dir)
             return True
         except Exception as e:
             print(f"Warning: Could not remove .git directory from {repo_path}: {e}")

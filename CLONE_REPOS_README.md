@@ -117,7 +117,7 @@ Failed repositories:
 
 ## Requirements
 
-- Python 3.10 or higher
+- Python 3.6 or higher
 - Git command-line tool installed and available in PATH
 - Sufficient disk space for all repositories
 - Internet connection
