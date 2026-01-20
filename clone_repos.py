@@ -39,6 +39,19 @@ def parse_tsv(tsv_file):
     return repos
 
 
+def sanitize_error_message(error_msg):
+    """Remove potentially sensitive information from error messages."""
+    if not error_msg:
+        return error_msg
+    
+    # Remove credentials from URLs (format: https://user:pass@host...)
+    import re
+    # Pattern to match credentials in URLs
+    pattern = r'(https?://)[^@\s]+:[^@\s]+@'
+    sanitized = re.sub(pattern, r'\1***:***@', error_msg)
+    return sanitized
+
+
 def clone_repo(url, dest_path):
     """Clone a repository to the specified destination."""
     try:
@@ -52,11 +65,11 @@ def clone_repo(url, dest_path):
         if result.returncode == 0:
             return True, None
         else:
-            return False, result.stderr
+            return False, sanitize_error_message(result.stderr)
     except subprocess.TimeoutExpired:
         return False, f"Timeout after {CLONE_TIMEOUT_SECONDS} seconds"
     except Exception as e:
-        return False, str(e)
+        return False, sanitize_error_message(str(e))
 
 
 def remove_git_dir(repo_path):
@@ -104,6 +117,7 @@ def main():
     
     # Track results
     success_count = 0
+    skipped_count = 0
     failed_repos = []
     
     # Clone each repository
@@ -113,7 +127,7 @@ def main():
         # Skip if already exists
         if dest_path.exists():
             print(f"[{i}/{len(repos)}] Skipping {name} (already exists)")
-            success_count += 1
+            skipped_count += 1
             continue
         
         # Clone the repository
@@ -138,6 +152,7 @@ def main():
     print("="*70)
     print(f"Total repositories: {len(repos)}")
     print(f"Successfully cloned: {success_count}")
+    print(f"Skipped (already exist): {skipped_count}")
     print(f"Failed: {len(failed_repos)}")
     
     if failed_repos:
