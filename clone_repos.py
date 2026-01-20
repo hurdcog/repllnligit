@@ -55,7 +55,9 @@ def sanitize_error_message(error_msg):
 def clone_repo(url, dest_path):
     """Clone a repository to the specified destination."""
     try:
-        print(f"Cloning {url} to {dest_path}...")
+        # Sanitize URL for display (may contain credentials)
+        display_url = sanitize_error_message(url)
+        print(f"Cloning {display_url} to {dest_path}...")
         result = subprocess.run(
             ['git', 'clone', '--depth', '1', url, str(dest_path)],
             capture_output=True,
@@ -158,7 +160,10 @@ def main():
     if failed_repos:
         print("\nFailed repositories:")
         for name, error in failed_repos:
-            print(f"  - {name}: {error[:ERROR_MESSAGE_MAX_LENGTH]}")
+            truncated_error = error[:ERROR_MESSAGE_MAX_LENGTH]
+            if len(error) > ERROR_MESSAGE_MAX_LENGTH:
+                truncated_error += "..."
+            print(f"  - {name}: {truncated_error}")
     
     return 0 if len(failed_repos) == 0 else 1
 
